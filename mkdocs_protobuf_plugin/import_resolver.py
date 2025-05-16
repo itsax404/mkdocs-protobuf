@@ -10,14 +10,14 @@ class ProtoImportResolver:
     Class to handle resolving imports between proto files
     """
 
-    def __init__(self, proto_dirs=None):
+    def __init__(self, proto_dirs: list[str] = []):
         """
         Initialize the import resolver
 
         Args:
             proto_dirs: List of directories containing proto files
         """
-        self.proto_dirs = proto_dirs or []
+        self.proto_dirs = proto_dirs
         self.import_map = {}  # Maps import paths to actual file paths
         self.package_map = {}  # Maps package names to file paths
         self.cross_references = (
@@ -25,7 +25,7 @@ class ProtoImportResolver:
         )  # Maps message/service references to their file paths
         self.initialized = False
 
-    def initialize(self, proto_files):
+    def initialize(self, proto_files: list[str]):
         """
         Initialize the resolver with a list of proto files
 
@@ -35,20 +35,20 @@ class ProtoImportResolver:
         log.debug("Initializing import resolver")
 
         # Reset maps
-        self.import_map = {}
-        self.package_map = {}
-        self.cross_references = {}
+        self.import_map: dict[str, str] = {}
+        self.package_map: dict[str, str] = {}
+        self.cross_references: dict[str, str] = {}
 
         # Process all files to build import and package maps
         for proto_file in proto_files:
-            self._process_proto_file(proto_file)
+            self.__process_proto_file__(proto_file)
 
         self.initialized = True
         log.debug(
             f"Import resolver initialized with {len(self.import_map)} imports and {len(self.package_map)} packages"
         )
 
-    def _process_proto_file(self, proto_file):
+    def __process_proto_file__(self, proto_file: str):
         """
         Process a single proto file to extract imports and package info
 
@@ -59,7 +59,7 @@ class ProtoImportResolver:
             abs_file_path = os.path.abspath(proto_file)
 
             # Find the most specific proto directory that contains this file
-            best_proto_dir = self._find_best_proto_dir(abs_file_path)
+            best_proto_dir = self.__find_best_proto_dir__(abs_file_path)
 
             # Extract import path for this file
             import_path = None
@@ -85,12 +85,12 @@ class ProtoImportResolver:
                 self.package_map[package] = abs_file_path
 
                 # Extract message, enum, and service definitions
-                self._extract_definitions(content, package, abs_file_path)
+                self.__extract_definitions__(content, package, abs_file_path)
 
         except Exception as e:
             log.error(f"Error processing proto file {proto_file} for imports: {e}")
 
-    def _find_best_proto_dir(self, file_path):
+    def __find_best_proto_dir__(self, file_path: str) -> str:
         """
         Find the most specific proto directory that contains this file
 
@@ -100,7 +100,7 @@ class ProtoImportResolver:
         Returns:
             The absolute path to the best matching proto directory or None
         """
-        best_proto_dir = None
+        best_proto_dir = ""
         longest_common_path = ""
 
         for dir_path in self.proto_dirs:
@@ -114,12 +114,11 @@ class ProtoImportResolver:
                     best_proto_dir = abs_dir_path
                     longest_common_path = common_path
             except ValueError:
-                # commonpath raises ValueError if paths are on different drives
                 continue
 
         return best_proto_dir
 
-    def _extract_definitions(self, content, package, file_path):
+    def __extract_definitions__(self, content: str, package: str, file_path: str) -> None:
         """
         Extract top-level definitions from a proto file
 
@@ -146,7 +145,7 @@ class ProtoImportResolver:
             qualified_name = f"{package}.{service_name}"
             self.cross_references[qualified_name] = file_path
 
-    def resolve_import(self, import_path, importing_file=None):
+    def resolve_import(self, import_path: str, importing_file: str = "") -> str:
         """
         Resolve an import path to an absolute file path
 
@@ -159,7 +158,7 @@ class ProtoImportResolver:
         """
         if not self.initialized:
             log.warning("Import resolver not initialized")
-            return None
+            return ""
 
         # Direct lookup in import map
         if import_path in self.import_map:
@@ -180,9 +179,9 @@ class ProtoImportResolver:
                 return potential_path
 
         log.warning(f"Could not resolve import: {import_path}")
-        return None
+        return ""
 
-    def resolve_type_reference(self, type_ref):
+    def resolve_type_reference(self, type_ref: str) -> str:
         """
         Resolve a type reference to its file path
 
@@ -194,7 +193,7 @@ class ProtoImportResolver:
         """
         if not self.initialized:
             log.warning("Import resolver not initialized")
-            return None
+            return ""
 
         # Check if it's a qualified reference
         if "." in type_ref:
@@ -208,9 +207,9 @@ class ProtoImportResolver:
                 if package in self.package_map:
                     return self.package_map[package]
 
-        return None
+        return ""
 
-    def get_markdown_link(self, type_ref, current_file_path, output_dir):
+    def get_markdown_link(self, type_ref: str, current_file_path: str, output_dir: str) -> str:
         """
         Generate a markdown link for a type reference
 
@@ -230,7 +229,7 @@ class ProtoImportResolver:
             return f"`{type_ref}`"
 
         # Determine the most specific proto dir for this target file
-        best_proto_dir = self._find_best_proto_dir(target_file)
+        best_proto_dir = self.__find_best_proto_dir__(target_file)
 
         if best_proto_dir:
             # Get the relative path from the proto directory

@@ -5,6 +5,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from mkdocs.plugins import BasePlugin
 from mkdocs.config.config_options import Type
+from mkdocs.config.defaults import MkDocsConfig
 
 from .converter import ProtoToMarkdownConverter
 from .file_cache import ProtoFileCache
@@ -14,7 +15,8 @@ log = logging.getLogger("mkdocs.plugins.protobuf")
 
 
 class ProtoFileEventHandler(FileSystemEventHandler):
-    def __init__(self, converter, proto_paths, proto_dirs, output_dir, config, plugin):
+    def __init__(self, converter: ProtoToMarkdownConverter, proto_paths: list[str], proto_dirs: list[str],
+                 output_dir: str, config: MkDocsConfig, plugin: "ProtobufPlugin"):
         self.converter = converter
         self.proto_paths = proto_paths
         self.proto_dirs = proto_dirs
@@ -22,7 +24,7 @@ class ProtoFileEventHandler(FileSystemEventHandler):
         self.config = config
         self.plugin = plugin
 
-    def _process_proto_file(self, file_path):
+    def __process_proto_file__(self, file_path: str):
         """Process a single proto file if it's within our watched paths"""
         abs_path = str(Path(file_path).absolute())
 
@@ -61,7 +63,7 @@ class ProtoFileEventHandler(FileSystemEventHandler):
             self.plugin.file_cache.update_file_hash(abs_path)
 
             # Update the navigation with the new files
-            self.plugin._update_navigation(
+            self.plugin.update_navigation(
                 self.config, self.output_dir, generated_files
             )
             return True
@@ -154,13 +156,13 @@ class ProtobufPlugin(BasePlugin):
     )
 
     def __init__(self):
-        self.converter = ProtoToMarkdownConverter()
         self.observer = None
         self.watch_handlers = []
-        self.proto_dirs = []
+        self.proto_dirs: list[str] = []
+        self.converter = ProtoToMarkdownConverter(self.proto_dirs)
         self.file_cache = ProtoFileCache()
 
-    def on_config(self, config):
+    def on_config(self, config: MkDocsConfig):
         """
         Process the proto_paths from the config and convert the proto files
         """
@@ -179,7 +181,7 @@ class ProtobufPlugin(BasePlugin):
         self.converter.proto_dirs = self.proto_dirs
 
         # Convert all proto files at startup
-        generated_files = self._process_proto_files(proto_paths, output_path)
+        generated_files = self.__process_proto_files__(proto_paths, output_path)
 
         # Update navigation if needed
         self._update_navigation(config, output_dir, generated_files)
@@ -235,7 +237,7 @@ class ProtobufPlugin(BasePlugin):
 
         return server
 
-    def _update_navigation(self, config, output_dir, generated_files):
+    def __update_navigation__(self, config, output_dir, generated_files):
         """
         Update the MkDocs navigation configuration to include generated markdown files
         """
@@ -321,7 +323,7 @@ class ProtobufPlugin(BasePlugin):
 
             log.info(f"Updated navigation with {len(rel_files)} API documentation files")
 
-    def _update_lang_nav(self, nav, lang, nav_tree, output_dir):
+    def __update_lang_nav__(self, nav, lang, nav_tree, output_dir):
         """
         Update language-specific navigation with API documentation
         """
@@ -362,7 +364,7 @@ class ProtobufPlugin(BasePlugin):
 
         log.info(f"Updated navigation for language '{lang}' with API documentation")
 
-    def _are_files_in_nav(self, nav, generated_files, docs_dir):
+    def __are_files_in_nav__(self, nav, generated_files, docs_dir):
         """
         Check if all generated files are already included in the navigation
         """
@@ -380,7 +382,7 @@ class ProtobufPlugin(BasePlugin):
 
         # Recursively search for all file paths in the nav
         nav_files = []
-        self._extract_nav_files(nav, nav_files)
+        self.__extract_nav_files__(nav, nav_files)
 
         # Check if all generated files are in the nav
         missing_files = [f for f in rel_generated_files if f not in nav_files]
@@ -392,17 +394,17 @@ class ProtobufPlugin(BasePlugin):
         """
         if isinstance(nav_item, list):
             for item in nav_item:
-                self._extract_nav_files(item, result)
+                self.__extract_nav_files__(item, result)
         elif isinstance(nav_item, dict):
             for key, value in nav_item.items():
                 if isinstance(value, str):
                     result.append(value)
                 else:
-                    self._extract_nav_files(value, result)
+                    self.__extract_nav_files__(value, result)
         elif isinstance(nav_item, str):
             result.append(nav_item)
 
-    def _build_nav_tree(self, file_paths):
+    def __build_nav_tree__(self, file_paths):
         """
         Build a nested navigation tree from a list of file paths
         """
@@ -432,9 +434,9 @@ class ProtobufPlugin(BasePlugin):
             current[name] = file_path
 
         # Convert nested dicts to MkDocs nav format
-        return self._convert_nav_tree(nav_tree)
+        return self.__convert_nav_tree__(nav_tree)
 
-    def _convert_nav_tree(self, nav_tree):
+    def __convert_nav_tree__(self, nav_tree):
         """
         Convert a nested dictionary to MkDocs nav format
         """
@@ -443,7 +445,7 @@ class ProtobufPlugin(BasePlugin):
         for key, value in sorted(nav_tree.items()):
             if isinstance(value, dict):
                 # This is a directory, recurse
-                result.append({key: self._convert_nav_tree(value)})
+                result.append({key: self.__convert_nav_tree__(value)})
             else:
                 # This is a file
                 result.append({key: value})
@@ -461,12 +463,12 @@ class ProtobufPlugin(BasePlugin):
         # Save the file cache
         self.file_cache.save_cache()
 
-    def _process_proto_files(self, proto_paths, output_dir):
+    def __process_proto_files__(self, proto_paths: list[str], output_dir: str):
         """
         Process all proto files from the given paths
         Returns a list of generated markdown files
         """
-        proto_files = set()  # Use a set to avoid duplicates
+        proto_files: set[str] = set()  # Use a set to avoid duplicates
         generated_files = []
 
         # Get absolute path to output directory to filter paths
@@ -537,7 +539,7 @@ class ProtobufPlugin(BasePlugin):
 
         if proto_files:
             # Filter files that have changed
-            changed_files = []
+            changed_files: list[str] = []
             for file_path in proto_files:
                 abs_path = os.path.abspath(file_path)
                 if self.file_cache.is_file_changed(abs_path):

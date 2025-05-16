@@ -83,7 +83,7 @@ message GetDocumentRequest {
     def test_auto_nav_generation(self):
         """Test that navigation is auto-generated correctly"""
         # Process the files
-        generated_files = self.plugin._process_proto_files(
+        generated_files = self.plugin.__process_proto_files__(
             [self.proto_dir],
             self.output_dir
         )
@@ -120,7 +120,7 @@ message GetDocumentRequest {
     def test_custom_nav_preservation(self):
         """Test that custom navigation is preserved"""
         # Process the files
-        generated_files = self.plugin._process_proto_files(
+        generated_files = self.plugin.__process_proto_files__(
             [self.proto_dir],
             self.output_dir
         )

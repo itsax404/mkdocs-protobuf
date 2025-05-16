@@ -51,7 +51,7 @@ message TestMessage {
     def test_initial_file_processing(self):
         """Test that files are processed on first run"""
         # Process files
-        generated_files = self.plugin._process_proto_files(
+        generated_files = self.plugin.__process_proto_files__(
             [self.proto_dir],
             self.output_dir
         )
@@ -64,7 +64,7 @@ message TestMessage {
     def test_unchanged_file_skipping(self):
         """Test that unchanged files are skipped on subsequent runs"""
         # First run - should process the file
-        generated_files1 = self.plugin._process_proto_files(
+        generated_files1 = self.plugin.__process_proto_files__(
             [self.proto_dir],
             self.output_dir
         )
@@ -78,7 +78,7 @@ message TestMessage {
         time.sleep(0.1)
 
         # Second run - should skip the file since it hasn't changed
-        generated_files2 = self.plugin._process_proto_files(
+        generated_files2 = self.plugin.__process_proto_files__(
             [self.proto_dir],
             self.output_dir
         )
@@ -93,7 +93,7 @@ message TestMessage {
     def test_changed_file_processing(self):
         """Test that changed files are processed on subsequent runs"""
         # First run - should process the file
-        self.plugin._process_proto_files(
+        self.plugin.__process_proto_files__(
             [self.proto_dir],
             self.output_dir
         )
@@ -117,7 +117,7 @@ message TestMessage {
 """)
 
         # Second run - should process the file again
-        generated_files2 = self.plugin._process_proto_files(
+        generated_files2 = self.plugin.__process_proto_files__(
             [self.proto_dir],
             self.output_dir
         )
