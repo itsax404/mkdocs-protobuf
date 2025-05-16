@@ -28,7 +28,6 @@ nav:
     - Architecture: architecture.md
     - Testing Guide: testing.md
     - Cross-References: cross-references.md
-    - Versioning: versioning.md
   - Changelog: changelog.md
 
 markdown_extensions:
