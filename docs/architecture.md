@@ -74,7 +74,7 @@ Here's a high-level diagram of how they interact:
 ```python
 class ProtobufPlugin(BasePlugin):
     """Main plugin class that integrates with MkDocs."""
-    
+
     # Configuration schema
     config_scheme = (
         ('proto_paths', Type(list, default=[])),
@@ -82,15 +82,15 @@ class ProtobufPlugin(BasePlugin):
         ('include_navbar', Type(bool, default=True)),
         # Additional config options...
     )
-    
+
     def on_config(self, config):
         """Set up the plugin when MkDocs configuration loads."""
         # Initialize converter, paths, etc.
-        
+
     def on_files(self, files, config):
         """Process proto files and generate markdown."""
         # Scan proto files, convert them, add to files collection
-        
+
     def _update_navigation(self, config, output_dir, generated_files):
         """Update the navigation structure with generated files."""
         # Build navigation entries for the generated files
@@ -101,31 +101,31 @@ class ProtobufPlugin(BasePlugin):
 ```python
 class ProtoToMarkdownConverter:
     """Handles conversion from proto files to markdown."""
-    
+
     def convert_proto_files(self, proto_files, output_dir):
         """Convert a list of proto files to markdown."""
         # Batch process multiple proto files
-        
+
     def _convert_proto_file(self, proto_file, output_dir):
         """Convert a single proto file to markdown."""
         # Parse proto file and convert to markdown
-        
+
     def _extract_package_info(self, content):
         """Extract package information from proto content."""
         # Parse package declaration
-        
+
     def _extract_imports(self, content):
         """Extract import statements from proto content."""
         # Parse import declarations
-        
+
     def _extract_messages(self, content):
         """Extract message definitions from proto content."""
         # Parse message declarations and nested messages
-        
+
     def _extract_services(self, content):
         """Extract service definitions from proto content."""
         # Parse service declarations and methods
-        
+
     def _build_markdown(self, proto_file, package, imports, messages, services):
         """Build markdown content from parsed proto elements."""
         # Construct the markdown document
@@ -136,19 +136,19 @@ class ProtoToMarkdownConverter:
 ```python
 class ProtoImportResolver:
     """Resolves imports between proto files."""
-    
+
     def initialize(self, proto_files):
         """Initialize the resolver with a list of proto files."""
         # Build import and package maps
-        
+
     def resolve_import_path(self, import_path, importing_file):
         """Resolve an import statement to an actual file path."""
         # Find the file corresponding to an import statement
-        
+
     def get_package_file(self, package_name):
         """Get the file path for a package name."""
         # Find the file containing a package declaration
-        
+
     def create_cross_reference_link(self, ref_type, current_file, target_file):
         """Create a markdown link between related proto elements."""
         # Generate relative links between files

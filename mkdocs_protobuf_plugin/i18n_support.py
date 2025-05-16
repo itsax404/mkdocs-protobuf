@@ -4,10 +4,10 @@ MkDocs Protobuf Plugin - i18n Support
 This module provides compatibility with the mkdocs-static-i18n plugin.
 """
 import logging
-import os.path
 
 # Set up logging
 log = logging.getLogger("mkdocs.plugins.protobuf.i18n")
+
 
 class I18nSupport:
     """Support for the mkdocs-static-i18n plugin."""
@@ -25,7 +25,7 @@ class I18nSupport:
         """Extract configured languages from mkdocs-static-i18n configuration."""
         plugins = config.get("plugins", {})
         i18n_config = None
-        
+
         # Extract i18n plugin config based on its structure
         if isinstance(plugins, list):
             for p in plugins:
@@ -34,10 +34,10 @@ class I18nSupport:
                     break
         elif "i18n" in plugins:
             i18n_config = plugins["i18n"]
-        
+
         if not i18n_config:
             return []
-            
+
         # Get languages from config
         languages = i18n_config.get("languages", [])
         if isinstance(languages, list):
@@ -49,7 +49,7 @@ class I18nSupport:
         """Get default language from mkdocs-static-i18n configuration."""
         plugins = config.get("plugins", {})
         i18n_config = None
-        
+
         # Extract i18n plugin config
         if isinstance(plugins, list):
             for p in plugins:
@@ -58,10 +58,10 @@ class I18nSupport:
                     break
         elif "i18n" in plugins:
             i18n_config = plugins["i18n"]
-        
+
         if not i18n_config:
             return None
-            
+
         return i18n_config.get("default_language")
 
     @staticmethod
@@ -73,18 +73,18 @@ class I18nSupport:
             if isinstance(entry, dict) and lang in entry:
                 lang_entry = i
                 break
-                
+
         if lang_entry is not None:
             # Language section exists, update it
             lang_nav = nav[lang_entry][lang]
             api_entry = None
-            
+
             if isinstance(lang_nav, list):
                 for i, entry in enumerate(lang_nav):
                     if isinstance(entry, dict) and "API Reference" in entry:
                         api_entry = i
                         break
-                        
+
             if api_entry is not None:
                 # Update existing API Reference
                 lang_nav[api_entry]["API Reference"] = nav_tree
@@ -102,7 +102,7 @@ class I18nSupport:
     def build_i18n_nav_tree(file_paths, languages):
         """Build navigation trees for each language."""
         lang_trees = {}
-        
+
         # Group files by language
         for lang in languages:
             lang_prefix = f"{lang}/"
@@ -112,5 +112,5 @@ class I18nSupport:
                 # Strip the language prefix for tree building
                 stripped_files = [f[len(lang_prefix):] for f in lang_files]
                 lang_trees[lang] = stripped_files
-                
+
         return lang_trees

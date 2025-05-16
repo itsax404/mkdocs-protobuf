@@ -34,17 +34,17 @@ service TestService {
    * Unary API - standard request/response
    */
   rpc UnaryMethod(UnaryRequest) returns (UnaryResponse);
-  
+
   /**
    * Server streaming API
    */
   rpc ServerStreamingMethod(StreamRequest) returns (stream StreamResponse);
-  
+
   /**
    * Client streaming API
    */
   rpc ClientStreamingMethod(stream StreamRequest) returns (StreamResponse);
-  
+
   /**
    * Bidirectional streaming API
    */
@@ -165,7 +165,7 @@ service AnnotatedService {
       get: "/v1/resources/{name}"
     };
   }
-  
+
   /**
    * Method with additional options
    */

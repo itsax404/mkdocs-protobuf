@@ -22,12 +22,12 @@ service UserService {
    * Creates a new user
    */
   rpc CreateUser(CreateUserRequest) returns (User);
-  
+
   /**
    * Gets a user by ID
    */
   rpc GetUser(GetUserRequest) returns (User);
-  
+
   /**
    * Lists all users
    */
@@ -40,16 +40,16 @@ service UserService {
 message User {
   /** Unique user ID */
   string id = 1;
-  
+
   /** User's full name */
   string name = 2;
-  
+
   /** User's email address */
   string email = 3;
-  
+
   /** User's creation timestamp */
   int64 created_at = 4;
-  
+
   /** User's last update timestamp */
   int64 updated_at = 5;
 }
@@ -60,7 +60,7 @@ message User {
 message CreateUserRequest {
   /** User's name */
   string name = 1;
-  
+
   /** User's email */
   string email = 2;
 }
@@ -79,7 +79,7 @@ message GetUserRequest {
 message ListUsersRequest {
   /** Page size */
   int32 page_size = 1;
-  
+
   /** Page token */
   string page_token = 2;
 }
@@ -90,7 +90,7 @@ message ListUsersRequest {
 message ListUsersResponse {
   /** Users */
   repeated User users = 1;
-  
+
   /** Next page token */
   string next_page_token = 2;
 }
@@ -113,28 +113,28 @@ import "user.proto";
 message Document {
   /** Unique document ID */
   string id = 1;
-  
+
   /** Document title */
   string title = 2;
-  
+
   /** Document content */
   string content = 3;
-  
+
   /** Creator reference */
   user.User creator = 4;
-  
+
   /** Document creation timestamp */
   int64 created_at = 5;
-  
+
   /** Document last update timestamp */
   int64 updated_at = 6;
-  
+
   /** Document tags */
   repeated string tags = 7;
-  
+
   /** Document status */
   DocumentStatus status = 8;
-  
+
   /** Document metadata */
   DocumentMetadata metadata = 9;
 }
@@ -145,13 +145,13 @@ message Document {
 enum DocumentStatus {
   /** Status unknown */
   DOCUMENT_STATUS_UNSPECIFIED = 0;
-  
+
   /** Document is a draft */
   DOCUMENT_STATUS_DRAFT = 1;
-  
+
   /** Document is published */
   DOCUMENT_STATUS_PUBLISHED = 2;
-  
+
   /** Document is archived */
   DOCUMENT_STATUS_ARCHIVED = 3;
 }
@@ -162,16 +162,16 @@ enum DocumentStatus {
 message DocumentMetadata {
   /** Author information */
   string author_name = 1;
-  
+
   /** Original filename */
   string original_filename = 2;
-  
+
   /** File size in bytes */
   int64 size_bytes = 3;
-  
+
   /** MIME type */
   string mime_type = 4;
-  
+
   /** Language code (BCP-47) */
   string language_code = 5;
 }
@@ -182,13 +182,13 @@ message DocumentMetadata {
 message SearchDocumentRequest {
   /** Search query */
   string query = 1;
-  
+
   /** Maximum number of results */
   int32 max_results = 2;
-  
+
   /** Filter by document status */
   DocumentStatus status_filter = 3;
-  
+
   /** Filter by tags */
   repeated string tag_filters = 4;
 }
@@ -199,7 +199,7 @@ message SearchDocumentRequest {
 message SearchDocumentResponse {
   /** Matching documents */
   repeated Document documents = 1;
-  
+
   /** Total results count */
   int32 total_count = 2;
 }
@@ -220,27 +220,27 @@ service DocumentService {
    * Creates a new document
    */
   rpc CreateDocument(CreateDocumentRequest) returns (Document);
-  
+
   /**
    * Gets a document by ID
    */
   rpc GetDocument(GetDocumentRequest) returns (Document);
-  
+
   /**
    * Updates an existing document
    */
   rpc UpdateDocument(UpdateDocumentRequest) returns (Document);
-  
+
   /**
    * Deletes a document
    */
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
-  
+
   /**
    * Lists documents with filtering
    */
   rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse);
-  
+
   /**
    * Searches documents based on content and metadata
    */
@@ -253,16 +253,16 @@ service DocumentService {
 message CreateDocumentRequest {
   /** Document title */
   string title = 1;
-  
+
   /** Document content */
   string content = 2;
-  
+
   /** Creator ID */
   string creator_id = 3;
-  
+
   /** Document tags */
   repeated string tags = 4;
-  
+
   /** Document metadata */
   DocumentMetadata metadata = 5;
 }
@@ -281,19 +281,19 @@ message GetDocumentRequest {
 message UpdateDocumentRequest {
   /** Document ID */
   string id = 1;
-  
+
   /** Updated title */
   string title = 2;
-  
+
   /** Updated content */
   string content = 3;
-  
+
   /** Updated tags */
   repeated string tags = 4;
-  
+
   /** Updated status */
   DocumentStatus status = 5;
-  
+
   /** Updated metadata */
   DocumentMetadata metadata = 6;
 }
@@ -320,13 +320,13 @@ message DeleteDocumentResponse {
 message ListDocumentsRequest {
   /** Page size */
   int32 page_size = 1;
-  
+
   /** Page token */
   string page_token = 2;
-  
+
   /** Filter by document status */
   DocumentStatus status_filter = 3;
-  
+
   /** Filter by creator ID */
   string creator_id = 4;
 }
@@ -337,10 +337,10 @@ message ListDocumentsRequest {
 message ListDocumentsResponse {
   /** Documents */
   repeated Document documents = 1;
-  
+
   /** Next page token */
   string next_page_token = 2;
-  
+
   /** Total count */
   int32 total_count = 3;
 }
@@ -357,7 +357,7 @@ package test;
 message TestMessage {
   /** Sample string field */
   string name = 1;
-  
+
   /** Sample integer field */
   int32 count = 2;
 }

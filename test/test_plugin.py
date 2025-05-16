@@ -2,7 +2,6 @@ import unittest
 import tempfile
 import os
 import shutil
-from pathlib import Path
 
 from mkdocs_protobuf_plugin.converter import ProtoToMarkdownConverter
 from mkdocs_protobuf_plugin.import_resolver import ProtoImportResolver
@@ -150,10 +149,10 @@ package user;
 message User {
   // User ID
   string id = 1;
-  
+
   // User's full name
   string name = 2;
-  
+
   // User's email address
   string email = 3;
 }
@@ -175,13 +174,13 @@ import "user.proto";
 message Document {
   // Document ID
   string id = 1;
-  
+
   // Document title
   string title = 2;
-  
+
   // Document content
   string content = 3;
-  
+
   // Document creator
   user.User creator = 4;
 }
@@ -253,10 +252,6 @@ message GetDocumentRequest {
 
     def test_message_extraction(self):
         """Test that messages are correctly extracted from proto files"""
-        proto_files = [self.data_proto_path]
-        generated_files = self.converter.convert_proto_files(
-            proto_files, self.output_dir
-        )
 
         # Check that the data.md file contains the Document message
         data_md_path = os.path.join(
@@ -274,10 +269,6 @@ message GetDocumentRequest {
 
     def test_service_extraction(self):
         """Test that services are correctly extracted from proto files"""
-        proto_files = [self.service_proto_path]
-        generated_files = self.converter.convert_proto_files(
-            proto_files, self.output_dir
-        )
 
         # Check that the service.md file contains the DocumentService
         service_md_path = os.path.join(
@@ -294,10 +285,6 @@ message GetDocumentRequest {
 
     def test_cross_references(self):
         """Test that cross-references between proto files work correctly"""
-        proto_files = [self.user_proto_path, self.data_proto_path]
-        generated_files = self.converter.convert_proto_files(
-            proto_files, self.output_dir
-        )
 
         # Check that the data.md file contains a link to the User message
         data_md_path = os.path.join(

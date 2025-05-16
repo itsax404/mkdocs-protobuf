@@ -2,7 +2,6 @@ import unittest
 import tempfile
 import os
 import shutil
-from pathlib import Path
 
 from mkdocs_protobuf_plugin.converter import ProtoToMarkdownConverter
 from mkdocs_protobuf_plugin.import_resolver import ProtoImportResolver
@@ -47,7 +46,7 @@ package example.common.v1;
 message Timestamp {
   // Seconds since epoch
   int64 seconds = 1;
-  
+
   // Nanoseconds
   int32 nanos = 2;
 }
@@ -55,7 +54,7 @@ message Timestamp {
 message Status {
   // Status code
   int32 code = 1;
-  
+
   // Status message
   string message = 2;
 }
@@ -78,13 +77,13 @@ import "example/common/v1/common.proto";
 message User {
   // User ID
   string id = 1;
-  
+
   // User's full name
   string name = 2;
-  
+
   // User's email address
   string email = 3;
-  
+
   // User creation time
   example.common.v1.Timestamp created_at = 4;
 }
@@ -97,7 +96,7 @@ service UserService {
    * Creates a new user
    */
   rpc CreateUser(CreateUserRequest) returns (User);
-  
+
   /**
    * Gets a user by ID
    */
@@ -133,19 +132,19 @@ import "example/common/v1/common.proto";
 message Document {
   // Document ID
   string id = 1;
-  
+
   // Document title
   string title = 2;
-  
+
   // Document content
   string content = 3;
-  
+
   // Document creator
   example.user.v1.User creator = 4;
-  
+
   // Creation time
   example.common.v1.Timestamp created_at = 5;
-  
+
   // Last modified time
   example.common.v1.Timestamp updated_at = 6;
 }
@@ -158,17 +157,17 @@ service DocumentService {
    * Creates a new document
    */
   rpc CreateDocument(CreateDocumentRequest) returns (Document);
-  
+
   /**
    * Gets a document by ID
    */
   rpc GetDocument(GetDocumentRequest) returns (Document);
-  
+
   /**
    * Updates an existing document
    */
   rpc UpdateDocument(UpdateDocumentRequest) returns (Document);
-  
+
   /**
    * Deletes a document
    */
@@ -260,14 +259,6 @@ message DeleteResponse {
 
     def test_nested_cross_references(self):
         """Test that cross-references between nested proto files work correctly"""
-        proto_files = [
-            self.common_proto_path,
-            self.user_proto_path,
-            self.document_proto_path,
-        ]
-        generated_files = self.converter.convert_proto_files(
-            proto_files, self.output_dir
-        )
 
         # Check that document.md has proper links to user.md and common.md
         document_md_path = os.path.join(
@@ -294,14 +285,6 @@ message DeleteResponse {
 
     def test_navigation_structure(self):
         """Test that the navigation structure is built correctly"""
-        proto_files = [
-            self.common_proto_path,
-            self.user_proto_path,
-            self.document_proto_path,
-        ]
-        generated_files = self.converter.convert_proto_files(
-            proto_files, self.output_dir
-        )
 
         # Check that all necessary directories were created
         expected_dirs = [

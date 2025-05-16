@@ -4,7 +4,11 @@ import logging
 from pathlib import Path
 from .import_resolver import ProtoImportResolver
 
+METHOD_PATTERN = r"rpc\s+(\w+)\s*\(\s*(\w+(?:\.\w+)*)\s*\)\s*returns\s*\(\s*(\w+(?:\.\w+)*)\s*\)(?:\s*{(.*?)})?;(?:\s*//\s*(.*))?"  # noqa: E501
+
 log = logging.getLogger("mkdocs.plugins.protobuf")
+
+FIELD_PATTERN = r"(optional|required|repeated)?\s*(\w+(?:\.\w+)*)\s+(\w+)\s*=\s*(\d+)(?:\s*\[(.*?)\])?;(?:\s*//\s*(.*))?"
 
 
 class ProtoToMarkdownConverter:
@@ -277,31 +281,35 @@ class ProtoToMarkdownConverter:
                             )
 
                 if methods:
-                    markdown += "| Method | Request | Response | Description |\n"
-                    markdown += "|--------|---------|----------|-------------|\n"
-                    for method in methods:
-                        request = method["request"]
-                        response = method["response"]
+                    markdown += self._create_method_table(methods, current_output_file, current_proto_file)
 
-                        # Use import resolver to create links if possible
-                        if (
-                            current_proto_file
-                            and current_output_file
-                            and self.import_resolver.initialized
-                        ):
-                            request = self.import_resolver.get_markdown_link(
-                                request, current_output_file, self.output_dir
-                            )
-                            response = self.import_resolver.get_markdown_link(
-                                response, current_output_file, self.output_dir
-                            )
-                        else:
-                            request = f"`{request}`"
-                            response = f"`{response}`"
+        return markdown
 
-                        markdown += f"| {method['name']} | {request} | {response} | {method['description']} |\n"
-                    markdown += "\n"
+    def _create_method_table(self, methods, current_proto_file, current_output_file):
+        markdown = "| Method | Request | Response | Description |\n"
+        markdown += "|--------|---------|----------|-------------|\n"
+        for method in methods:
+            request = method["request"]
+            response = method["response"]
 
+            # Use import resolver to create links if possible
+            if (
+                current_proto_file
+                and current_output_file
+                and self.import_resolver.initialized
+            ):
+                request = self.import_resolver.get_markdown_link(
+                    request, current_output_file, self.output_dir
+                )
+                response = self.import_resolver.get_markdown_link(
+                    response, current_output_file, self.output_dir
+                )
+            else:
+                request = f"`{request}`"
+                response = f"`{response}`"
+
+            markdown += f"| {method['name']} | {request} | {response} | {method['description']} |\n"
+        markdown += "\n"
         return markdown
 
     def _format_message_markdown(
@@ -594,9 +602,8 @@ class ProtoToMarkdownConverter:
                 i += 1
 
         # Pattern to match field definitions
-        field_pattern = r"(optional|required|repeated)?\s*(\w+(?:\.\w+)*)\s+(\w+)\s*=\s*(\d+)(?:\s*\[(.*?)\])?;(?:\s*//\s*(.*))?"
 
-        for match in re.finditer(field_pattern, clean_content):
+        for match in re.finditer(FIELD_PATTERN, clean_content):
             modifier = match.group(1) or ""
             field_type = match.group(2)
             name = match.group(3)
@@ -781,9 +788,8 @@ class ProtoToMarkdownConverter:
                 i += 1
 
         # Now extract all methods
-        method_pattern = r"rpc\s+(\w+)\s*\(\s*(\w+(?:\.\w+)*)\s*\)\s*returns\s*\(\s*(\w+(?:\.\w+)*)\s*\)(?:\s*{(.*?)})?;(?:\s*//\s*(.*))?"
 
-        for match in re.finditer(method_pattern, service_content):
+        for match in re.finditer(METHOD_PATTERN, service_content):
             name = match.group(1)
             request = match.group(2)
             response = match.group(3)

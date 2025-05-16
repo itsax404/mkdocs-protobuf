@@ -14,17 +14,17 @@ service DocumentService {
    * Index a document for future retrieval
    */
   rpc IndexDocument(IndexDocumentRequest) returns (IndexDocumentResponse);
-  
+
   /**
    * Query the document index with natural language
    */
   rpc Query(QueryRequest) returns (QueryResponse);
-  
+
   /**
    * Retrieve a document by ID
    */
   rpc GetDocument(GetDocumentRequest) returns (Document);
-  
+
   /**
    * Delete a document from the index
    */
@@ -37,7 +37,7 @@ service DocumentService {
 message IndexDocumentRequest {
   // Document to index
   Document document = 1;
-  
+
   // Whether to chunk the document
   bool chunk = 2;
 }
@@ -48,7 +48,7 @@ message IndexDocumentRequest {
 message IndexDocumentResponse {
   // The indexed document
   Document document = 1;
-  
+
   // Number of chunks created (if chunking was requested)
   int32 chunk_count = 2;
 }
@@ -59,7 +59,7 @@ message IndexDocumentResponse {
 message QueryRequest {
   // The query to perform
   Query query = 1;
-  
+
   // Maximum number of results to return
   int32 limit = 2;
 }
@@ -70,20 +70,20 @@ message QueryRequest {
 message QueryResponse {
   // Query results
   repeated QueryResult results = 1;
-  
+
   // Query execution time in milliseconds
   int32 execution_time_ms = 2;
-  
+
   /**
    * A single query result
    */
   message QueryResult {
     // The document that matched
     Document document = 1;
-    
+
     // The document chunk that matched (if applicable)
     DocumentChunk chunk = 2;
-    
+
     // The relevance score (higher is better)
     float score = 3;
   }

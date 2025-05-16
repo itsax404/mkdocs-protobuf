@@ -11,16 +11,16 @@ import "user.proto";
 message Document {
   // Unique identifier for the document
   string id = 1;
-  
+
   // Document title
   string title = 2;
-  
+
   // Document content
   string content = 3;
-  
+
   // Document metadata
   map<string, string> metadata = 4;
-  
+
   // Creator of the document
   user.User creator = 5;
 }
@@ -31,10 +31,10 @@ message Document {
 message DocumentChunk {
   // Parent document ID
   string document_id = 1;
-  
+
   // Chunk content
   string content = 2;
-  
+
   // Chunk embedding
   repeated float embedding = 3;
 }
@@ -45,10 +45,10 @@ message DocumentChunk {
 message Query {
   // Query text
   string text = 1;
-  
+
   // Optional filters to apply
   map<string, string> filters = 2;
-  
+
   // User making the query
   user.User user = 3;
 }

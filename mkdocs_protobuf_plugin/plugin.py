@@ -277,17 +277,17 @@ class ProtobufPlugin(BasePlugin):
                 lang_prefix = f"{lang}/"
                 # Files for this language (starting with lang prefix)
                 lang_files = [f for f in rel_files if f.startswith(lang_prefix)]
-                
+
                 if lang_files:
                     # Strip language prefix for nav tree building
                     stripped_files = [f[len(lang_prefix):] for f in lang_files]
                     lang_file_groups[lang] = stripped_files
-                    
+
             # Process each language separately
             for lang, lang_files in lang_file_groups.items():
                 # Build navigation tree for this language
                 lang_nav_tree = self._build_nav_tree(lang_files)
-                
+
                 # Update language-specific navigation
                 self._update_lang_nav(config["nav"], lang, lang_nav_tree, output_dir)
         else:
@@ -320,7 +320,7 @@ class ProtobufPlugin(BasePlugin):
                     config["nav"].append({"API Reference": api_nav})
 
             log.info(f"Updated navigation with {len(rel_files)} API documentation files")
-            
+
     def _update_lang_nav(self, nav, lang, nav_tree, output_dir):
         """
         Update language-specific navigation with API documentation
@@ -331,21 +331,21 @@ class ProtobufPlugin(BasePlugin):
             if isinstance(entry, dict) and lang in entry:
                 lang_entry = i
                 break
-                
+
         if lang_entry is not None:
             # Language section exists
             lang_nav = nav[lang_entry][lang]
-            
+
             # Look for API Reference in this language section
             api_entry = None
             api_keys = ["API Reference", "API", output_dir]
-            
+
             if isinstance(lang_nav, list):
                 for i, entry in enumerate(lang_nav):
                     if isinstance(entry, dict) and any(key in entry for key in api_keys):
                         api_entry = i
                         break
-                        
+
             if api_entry is not None:
                 # Update existing API Reference in this language
                 api_key = next(key for key in api_keys if key in lang_nav[api_entry])
@@ -359,7 +359,7 @@ class ProtobufPlugin(BasePlugin):
         else:
             # Language section doesn't exist, create it with API Reference
             nav.append({lang: [{"API Reference": nav_tree}]})
-            
+
         log.info(f"Updated navigation for language '{lang}' with API documentation")
 
     def _are_files_in_nav(self, nav, generated_files, docs_dir):
@@ -558,7 +558,7 @@ class ProtobufPlugin(BasePlugin):
                     log.error(f"Error processing proto files: {str(e)}")
             else:
                 log.info(
-                    f"No proto files have changed since last build, skipping conversion"
+                    "No proto files have changed since last build, skipping conversion"
                 )
         else:
             log.warning("No proto files found in the specified paths")
