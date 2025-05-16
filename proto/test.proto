@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package test;
+
+// Import an example
+import "user.proto";
+
+/** 
+ * Test message to verify file watching functionality.
+ * Updated to test live reload with file cache!
+ * This is a new comment line to test change detection.
+ */
+message TestMessage {
+  // Name of the test
+  string name = 1;
+  
+  // Description of the test
+  string description = 2;
+  
+  // Status code
+  int32 status_code = 3;
+  
+  // Reference to user
+  string user_id = 4;
+  
+  /** Nested message for test results */
+  message TestResult {
+    bool passed = 1;  // Whether the test passed
+    int32 score = 2;  // Test score
+    string notes = 3; // Additional notes
+  }
+  
+  // The test result
+  TestResult result = 4;
+}
+
+/** 
+ * Test service for verification
+ */
+service TestService {
+  /** 
+   * Run a test
+   */
+  rpc RunTest(TestMessage) returns (TestMessage.TestResult);
+  
+  // Get test status
+  rpc GetStatus(TestMessage) returns (TestMessage);
+}

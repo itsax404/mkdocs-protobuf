@@ -1,0 +1,37 @@
+
+site_name: MkDocs Protobuf Plugin Test
+site_description: Test site for the MkDocs Protobuf Plugin
+
+theme:
+  name: material
+  features:
+    - navigations.tabs
+
+plugins:
+  - search
+  - protobuf:
+      proto_paths:
+        - proto/
+      output_dir: api
+
+# Documentation structure
+nav:
+  - Home: index.md
+  - API Reference: 
+    - Overview: api/index.md
+    - Test API: api/test.md
+    - User API: api/user.md
+    - Document API:
+      - Data: api/example/document/v1/data.md
+      - Service: api/example/document/v1/service.md
+  - Development:
+    - Architecture: architecture.md
+    - Testing Guide: testing.md
+    - Cross-References: cross-references.md
+    - Versioning: versioning.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences

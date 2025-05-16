@@ -1,0 +1,21 @@
+# Core requirements for the MkDocs Protobuf Plugin
+mkdocs>=1.4.0
+watchdog>=2.1.0
+
+# Dependencies for development and documentation
+mkdocs-material>=9.2.0
+pymdown-extensions>=10.0.0
+mkdocs-static-i18n>=1.0.0
+
+# Testing requirements
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Versioning and release requirements
+bumpversion>=0.6.0
+build>=0.10.0
+twine>=4.0.0
+
+# Package building
+setuptools>=65.0.0
+wheel>=0.38.0

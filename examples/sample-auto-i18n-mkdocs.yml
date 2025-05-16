@@ -1,0 +1,39 @@
+site_name: MkDocs Protobuf Plugin with Automatic i18n Detection
+site_description: Example showing the automatic i18n detection in the Protobuf Plugin
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+
+plugins:
+  - search
+  - i18n:
+      default_language: en
+      languages:
+        en: English
+        fr: Français
+        es: Español
+      nav_translations:
+        fr:
+          API Reference: Référence d'API
+          Overview: Vue d'ensemble
+        es:
+          API Reference: Referencia de API
+          Overview: Descripción general
+  - protobuf:
+      proto_paths:
+        - proto/
+      output_dir: api
+
+# Documentation structure
+nav:
+  - Home: index.md
+  - API Reference: 
+    - Overview: api/index.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences

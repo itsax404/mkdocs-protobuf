@@ -1,0 +1,54 @@
+
+syntax = "proto3";
+
+package example.document.v1;
+
+import "user.proto";
+
+/**
+ * Data types for the document service
+ */
+message Document {
+  // Unique identifier for the document
+  string id = 1;
+  
+  // Document title
+  string title = 2;
+  
+  // Document content
+  string content = 3;
+  
+  // Document metadata
+  map<string, string> metadata = 4;
+  
+  // Creator of the document
+  user.User creator = 5;
+}
+
+/**
+ * A chunk of a document for indexing
+ */
+message DocumentChunk {
+  // Parent document ID
+  string document_id = 1;
+  
+  // Chunk content
+  string content = 2;
+  
+  // Chunk embedding
+  repeated float embedding = 3;
+}
+
+/**
+ * Query request for the search service
+ */
+message Query {
+  // Query text
+  string text = 1;
+  
+  // Optional filters to apply
+  map<string, string> filters = 2;
+  
+  // User making the query
+  user.User user = 3;
+}

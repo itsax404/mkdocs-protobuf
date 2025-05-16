@@ -1,0 +1,31 @@
+site_name: Protocol Buffers Documentation
+site_description: Documentation generated from Protocol Buffer files
+site_author: Your Name
+
+theme:
+  name: material  # You can use any mkdocs theme
+
+plugins:
+  - search
+  - protobuf:
+      proto_paths:
+        - proto/
+        # - proto/example.proto  # You can also specify individual files
+      output_dir: docs/api  # Generated markdown files will be placed here
+
+# Documentation structure
+nav:
+  - Home: index.md
+  - API Reference:
+    - Overview: api/index.md
+    # The generated files will be available under the output_dir
+    # You can add them here manually or use another plugin to generate the nav
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+# Additional configuration
+extra:
+  version: 1.0.0

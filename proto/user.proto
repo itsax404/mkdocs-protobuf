@@ -1,0 +1,129 @@
+
+syntax = "proto3";
+
+package user;
+
+/**
+ * User service for managing user accounts.
+ */
+service UserService {
+  /**
+   * Creates a new user
+   */
+  rpc CreateUser(CreateUserRequest) returns (User);
+  
+  /**
+   * Gets a user by ID
+   */
+  rpc GetUser(GetUserRequest) returns (User);
+  
+  /**
+   * Updates an existing user
+   */
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+  
+  /**
+   * Deletes a user
+   */
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+}
+
+/**
+ * Request to create a new user
+ */
+message CreateUserRequest {
+  // The user to create
+  User user = 1;
+}
+
+/**
+ * Request to get an existing user
+ */
+message GetUserRequest {
+  // The ID of the user to retrieve
+  string user_id = 1;
+}
+
+/**
+ * Request to update an existing user
+ */
+message UpdateUserRequest {
+  // The user ID to update
+  string user_id = 1;
+  
+  // The new user data
+  User user = 2;
+}
+
+/**
+ * Request to delete a user
+ */
+message DeleteUserRequest {
+  // The ID of the user to delete
+  string user_id = 1;
+}
+
+/**
+ * Response after deleting a user
+ */
+message DeleteUserResponse {
+  // Whether the deletion was successful
+  bool success = 1;
+}
+
+/**
+ * User entity 
+ * 
+ * Represents a user in the system
+ */
+message User {
+  // Unique identifier for the user
+  string id = 1;
+  
+  // User's full name
+  string name = 2;
+  
+  // User's email address
+  string email = 3;
+  
+  // User's profile information
+  Profile profile = 4;
+  
+  // User roles
+  repeated Role roles = 5;
+  
+  // Nested profile message
+  message Profile {
+    // Profile picture URL
+    string avatar_url = 1;
+    
+    // User bio information
+    string bio = 2;
+  }
+  
+  // User status enumeration
+  enum Status {
+    UNKNOWN = 0;     // Status is unknown
+    ACTIVE = 1;      // User is active
+    INACTIVE = 2;    // User is inactive
+    SUSPENDED = 3;   // User is suspended
+  }
+  
+  // Current user status
+  Status status = 6;
+}
+
+/**
+ * Role entity
+ * Represents a role assigned to users
+ */
+message Role {
+  // Unique identifier for the role
+  string id = 1;
+  
+  // Name of the role
+  string name = 2;
+  
+  // Permissions associated with this role
+  repeated string permissions = 3;
+}

@@ -1,0 +1,114 @@
+
+syntax = "proto3";
+
+package example.document.v1;
+
+import "example/document/v1/data.proto";
+
+/**
+ * Document Search service
+ * for semantic search and document querying
+ */
+service DocumentService {
+  /**
+   * Index a document for future retrieval
+   */
+  rpc IndexDocument(IndexDocumentRequest) returns (IndexDocumentResponse);
+  
+  /**
+   * Query the document index with natural language
+   */
+  rpc Query(QueryRequest) returns (QueryResponse);
+  
+  /**
+   * Retrieve a document by ID
+   */
+  rpc GetDocument(GetDocumentRequest) returns (Document);
+  
+  /**
+   * Delete a document from the index
+   */
+  rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+}
+
+/**
+ * Request to index a document
+ */
+message IndexDocumentRequest {
+  // Document to index
+  Document document = 1;
+  
+  // Whether to chunk the document
+  bool chunk = 2;
+}
+
+/**
+ * Response after indexing a document
+ */
+message IndexDocumentResponse {
+  // The indexed document
+  Document document = 1;
+  
+  // Number of chunks created (if chunking was requested)
+  int32 chunk_count = 2;
+}
+
+/**
+ * Request to query the document index
+ */
+message QueryRequest {
+  // The query to perform
+  Query query = 1;
+  
+  // Maximum number of results to return
+  int32 limit = 2;
+}
+
+/**
+ * Response containing query results
+ */
+message QueryResponse {
+  // Query results
+  repeated QueryResult results = 1;
+  
+  // Query execution time in milliseconds
+  int32 execution_time_ms = 2;
+  
+  /**
+   * A single query result
+   */
+  message QueryResult {
+    // The document that matched
+    Document document = 1;
+    
+    // The document chunk that matched (if applicable)
+    DocumentChunk chunk = 2;
+    
+    // The relevance score (higher is better)
+    float score = 3;
+  }
+}
+
+/**
+ * Request to get a document by ID
+ */
+message GetDocumentRequest {
+  // Document ID to retrieve
+  string document_id = 1;
+}
+
+/**
+ * Request to delete a document
+ */
+message DeleteDocumentRequest {
+  // Document ID to delete
+  string document_id = 1;
+}
+
+/**
+ * Response after deleting a document
+ */
+message DeleteDocumentResponse {
+  // Whether the deletion was successful
+  bool success = 1;
+}
