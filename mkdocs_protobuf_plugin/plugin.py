@@ -2,9 +2,15 @@ import os
 import logging
 from pathlib import Path
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import (
+    FileSystemEventHandler, FileModifiedEvent, DirModifiedEvent,
+    FileCreatedEvent, DirCreatedEvent, FileDeletedEvent, DirDeletedEvent
+)
+from mkdocs.livereload import LiveReloadServer
 from mkdocs.plugins import BasePlugin
 from mkdocs.config.config_options import Type
+from typing import Any
+from mkdocs.config.base import Config
 from mkdocs.config.defaults import MkDocsConfig
 
 from .converter import ProtoToMarkdownConverter
@@ -16,7 +22,7 @@ log = logging.getLogger("mkdocs.plugins.protobuf")
 
 class ProtoFileEventHandler(FileSystemEventHandler):
     def __init__(self, converter: ProtoToMarkdownConverter, proto_paths: list[str], proto_dirs: list[str],
-                 output_dir: str, config: MkDocsConfig, plugin: "ProtobufPlugin"):
+                 output_dir: str, config: MkDocsConfig, plugin: "ProtobufPlugin") -> None:
         self.converter = converter
         self.proto_paths = proto_paths
         self.proto_dirs = proto_dirs
@@ -24,7 +30,7 @@ class ProtoFileEventHandler(FileSystemEventHandler):
         self.config = config
         self.plugin = plugin
 
-    def __process_proto_file__(self, file_path: str):
+    def __process_proto_file__(self, file_path: str) -> bool:
         """Process a single proto file if it's within our watched paths"""
         abs_path = str(Path(file_path).absolute())
 
@@ -69,11 +75,11 @@ class ProtoFileEventHandler(FileSystemEventHandler):
             return True
         return False
 
-    def on_modified(self, event):
+    def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
         if not event.is_directory and event.src_path.endswith(".proto"):
             # Skip files in the output directory
-            output_path = os.path.abspath(self.output_dir)
-            abs_event_path = os.path.abspath(event.src_path)
+            output_path: str = os.path.abspath(self.output_dir)
+            abs_event_path: str = str(os.path.abspath(event.src_path))
 
             try:
                 if os.path.commonpath([output_path, abs_event_path]) == output_path:
@@ -89,13 +95,13 @@ class ProtoFileEventHandler(FileSystemEventHandler):
                 log.debug(f"File content unchanged, skipping: {event.src_path}")
                 return
 
-            self._process_proto_file(event.src_path)
+            self.__process_proto_file__(str(event.src_path))
 
-    def on_created(self, event):
+    def on_created(self, event: FileCreatedEvent | DirCreatedEvent) -> None:
         if not event.is_directory and event.src_path.endswith(".proto"):
             # Skip files in the output directory
-            output_path = os.path.abspath(self.output_dir)
-            abs_event_path = os.path.abspath(event.src_path)
+            output_path: str = os.path.abspath(self.output_dir)
+            abs_event_path: str = str(os.path.abspath(event.src_path))
 
             try:
                 if os.path.commonpath([output_path, abs_event_path]) == output_path:
@@ -106,12 +112,12 @@ class ProtoFileEventHandler(FileSystemEventHandler):
             except ValueError:
                 pass
 
-            self._process_proto_file(event.src_path)
+            self.__process_proto_file__(str(event.src_path))
 
-    def on_deleted(self, event):
+    def on_deleted(self, event: FileDeletedEvent | DirDeletedEvent) -> None:
         if not event.is_directory and event.src_path.endswith(".proto"):
             # Find the corresponding markdown file and delete it
-            abs_path = str(Path(event.src_path).absolute())
+            abs_path = str(Path(str(event.src_path)).absolute())
             for proto_dir in self.proto_dirs:
                 try:
                     abs_proto_dir = os.path.abspath(proto_dir)
@@ -130,7 +136,7 @@ class ProtoFileEventHandler(FileSystemEventHandler):
                     log.warning(f"Error handling deleted proto file: {str(e)}")
 
             # Re-process all proto files to update navigation
-            proto_files = []
+            proto_files: list[str] = []
             for proto_path in self.proto_paths:
                 abs_path = os.path.abspath(proto_path)
                 if os.path.isdir(abs_path):
@@ -144,34 +150,35 @@ class ProtoFileEventHandler(FileSystemEventHandler):
             generated_files = self.converter.convert_proto_files(
                 proto_files, self.output_dir
             )
-            self.plugin._update_navigation(
+            self.plugin.update_navigation(
                 self.config, self.output_dir, generated_files
             )
 
 
-class ProtobufPlugin(BasePlugin):
-    config_scheme = (
-        ("proto_paths", Type(list, default=[])),
-        ("output_dir", Type(str, default="docs/generated")),
-    )
+class ProtobufPluginConfig(Config):
+    proto_paths: Type[list[str]] = Type(list, default=[])
+    output_dir = Type(str, default="docs/generated")
 
-    def __init__(self):
+
+class ProtobufPlugin(BasePlugin[ProtobufPluginConfig]):
+
+    def __init__(self) -> None:
         self.observer = None
-        self.watch_handlers = []
+        self.watch_handlers: list[ProtoFileEventHandler] = []
         self.proto_dirs: list[str] = []
         self.converter = ProtoToMarkdownConverter(self.proto_dirs)
         self.file_cache = ProtoFileCache()
 
-    def on_config(self, config: MkDocsConfig):
+    def on_config(self, config: MkDocsConfig) -> MkDocsConfig:
         """
         Process the proto_paths from the config and convert the proto files
         """
         # Get the absolute path to proto files
-        proto_paths = self.config.get("proto_paths", [])
-        output_dir = self.config.get("output_dir", "docs/generated")
+        proto_paths: list[str] = self.config.proto_paths
+        output_dir = self.config.output_dir
 
         # Make sure output directory exists
-        output_path = os.path.join(config["docs_dir"], output_dir)
+        output_path = os.path.join(config.docs_dir, output_dir)
         os.makedirs(output_path, exist_ok=True)
 
         # Store directory paths for directory structure preservation
@@ -184,22 +191,22 @@ class ProtobufPlugin(BasePlugin):
         generated_files = self.__process_proto_files__(proto_paths, output_path)
 
         # Update navigation if needed
-        self._update_navigation(config, output_dir, generated_files)
+        self.update_navigation(config, output_dir, generated_files)
 
         # Return the config
         return config
 
-    def on_serve(self, server, config, **kwargs):
+    def on_serve(self, server: LiveReloadServer, config: MkDocsConfig, **kwargs: Any) -> LiveReloadServer:
         """
         Start watching proto files for changes when in serve mode
         """
-        proto_paths = self.config.get("proto_paths", [])
+        proto_paths = self.config.proto_paths
         output_dir = os.path.join(
-            config["docs_dir"], self.config.get("output_dir", "docs/generated")
+            config.docs_dir, self.config.output_dir
         )
 
         # Get absolute path to docs directory to filter events
-        docs_dir_abs = os.path.abspath(config["docs_dir"])
+        docs_dir_abs: str = os.path.abspath(config.docs_dir)
 
         # Create file system observer
         self.observer = Observer()
@@ -237,7 +244,7 @@ class ProtobufPlugin(BasePlugin):
 
         return server
 
-    def __update_navigation__(self, config, output_dir, generated_files):
+    def update_navigation(self, config: MkDocsConfig, output_dir: str, generated_files: list[str]) -> None:
         """
         Update the MkDocs navigation configuration to include generated markdown files
         """
@@ -247,7 +254,7 @@ class ProtobufPlugin(BasePlugin):
 
         # Check if we have manually defined all API files in the nav
         # If all generated files are already covered by the nav, we don't need to update it
-        if self._are_files_in_nav(config["nav"], generated_files, config["docs_dir"]):
+        if self.__are_files_in_nav__(config.nav, generated_files, config.docs_dir):
             log.info("All API files are already in the navigation, not updating nav")
             return
 
@@ -256,8 +263,8 @@ class ProtobufPlugin(BasePlugin):
         languages = I18nSupport.get_languages(config) if is_i18n_active else []
 
         # Convert paths to be relative to docs_dir
-        docs_dir = config["docs_dir"]
-        rel_files = []
+        docs_dir = config.docs_dir
+        rel_files: list[str] = []
         for file_path in generated_files:
             if os.path.isabs(file_path):
                 try:
@@ -274,7 +281,7 @@ class ProtobufPlugin(BasePlugin):
         # Handle navigation based on whether i18n is active
         if is_i18n_active and languages:
             # For i18n, we need to organize files by language
-            lang_file_groups = {}
+            lang_file_groups: dict[str, list[str]] = {}
             for lang in languages:
                 lang_prefix = f"{lang}/"
                 # Files for this language (starting with lang prefix)
@@ -288,23 +295,22 @@ class ProtobufPlugin(BasePlugin):
             # Process each language separately
             for lang, lang_files in lang_file_groups.items():
                 # Build navigation tree for this language
-                lang_nav_tree = self._build_nav_tree(lang_files)
+                lang_nav_tree = self.__build_nav_tree__(lang_files)
 
                 # Update language-specific navigation
-                self._update_lang_nav(config["nav"], lang, lang_nav_tree, output_dir)
+                self.__update_lang_nav__(config.nav, lang, lang_nav_tree, output_dir)
         else:
             # Regular (non-i18n) navigation handling
             # Build a navigation tree
-            api_nav = self._build_nav_tree(rel_files)
-
+            api_nav = self.__build_nav_tree__(rel_files)
             # Check if we need to create a default nav
-            if "nav" not in config or not config["nav"]:
+            if config.nav is None:
                 # Create API Reference entry
-                config["nav"] = [{"API Reference": api_nav}]
+                config.nav = [{"API Reference": api_nav}]
             else:
                 # Check for an existing API Reference entry
                 api_entry = None
-                for i, entry in enumerate(config["nav"]):
+                for i, entry in enumerate(config.nav):
                     if isinstance(entry, dict) and list(entry.keys())[0] in [
                         "API Reference",
                         "API",
@@ -323,7 +329,7 @@ class ProtobufPlugin(BasePlugin):
 
             log.info(f"Updated navigation with {len(rel_files)} API documentation files")
 
-    def __update_lang_nav__(self, nav, lang, nav_tree, output_dir):
+    def __update_lang_nav__(self, nav: list[Any], lang: str, nav_tree: list[Any], output_dir: str) -> None:
         """
         Update language-specific navigation with API documentation
         """
@@ -364,12 +370,12 @@ class ProtobufPlugin(BasePlugin):
 
         log.info(f"Updated navigation for language '{lang}' with API documentation")
 
-    def __are_files_in_nav__(self, nav, generated_files, docs_dir):
+    def __are_files_in_nav__(self, nav: Any, generated_files: list[str], docs_dir: str) -> bool:
         """
         Check if all generated files are already included in the navigation
         """
         # Convert absolute paths to relative for comparison
-        rel_generated_files = []
+        rel_generated_files: list[str] = []
         for file_path in generated_files:
             if os.path.isabs(file_path):
                 try:
@@ -388,7 +394,7 @@ class ProtobufPlugin(BasePlugin):
         missing_files = [f for f in rel_generated_files if f not in nav_files]
         return len(missing_files) == 0
 
-    def _extract_nav_files(self, nav_item, result):
+    def __extract_nav_files__(self, nav_item: Any, result: list[str]) -> None:
         """
         Recursively extract all file paths from a nav item
         """
@@ -404,7 +410,7 @@ class ProtobufPlugin(BasePlugin):
         elif isinstance(nav_item, str):
             result.append(nav_item)
 
-    def __build_nav_tree__(self, file_paths):
+    def __build_nav_tree__(self, file_paths: list[str]) -> list[dict[str, Any]]:
         """
         Build a nested navigation tree from a list of file paths
         """
@@ -436,7 +442,7 @@ class ProtobufPlugin(BasePlugin):
         # Convert nested dicts to MkDocs nav format
         return self.__convert_nav_tree__(nav_tree)
 
-    def __convert_nav_tree__(self, nav_tree):
+    def __convert_nav_tree__(self, nav_tree: dict[str, Any]) -> list[dict[str, Any]]:
         """
         Convert a nested dictionary to MkDocs nav format
         """
@@ -452,7 +458,7 @@ class ProtobufPlugin(BasePlugin):
 
         return result
 
-    def on_shutdown(self):
+    def on_shutdown(self) -> None:
         """
         Stop the file watcher when shutting down
         """
@@ -463,7 +469,7 @@ class ProtobufPlugin(BasePlugin):
         # Save the file cache
         self.file_cache.save_cache()
 
-    def __process_proto_files__(self, proto_paths: list[str], output_dir: str):
+    def __process_proto_files__(self, proto_paths: list[str], output_dir: str) -> list[str]:
         """
         Process all proto files from the given paths
         Returns a list of generated markdown files

@@ -1,0 +1,24 @@
+[project]
+name = "mkdocs-proto-gen"
+dynamic = ["version"]
+dependencies = [
+    "mkdocs>=1.4.0",
+    "watchdog>=2.1.0",
+]
+requires-python = ">=3.8"
+authors = [
+    {name="itsax404", email="itsax404@gmail.com"}
+]
+description = "Convert Protobuf files into Mkdocs documentation"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Classifier: Development Status :: 4 - Beta",
+    "Classifier: Intended Audience :: Developers",
+    "Classifier: License :: OSI Approved :: MIT License",
+    "Classifier: Programming Language :: Python"
+]
+
+[project.urls]
+Homepage = "https://github.com/itsax404/mkdocs-protobuf"

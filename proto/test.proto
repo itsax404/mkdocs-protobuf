@@ -32,6 +32,8 @@ message TestMessage {
 
   // The test result
   TestResult result = 4;
+  
+  string test = 5;
 }
 
 /** 

@@ -1,8 +1,6 @@
 # Protocol Documentation: test.proto
 
-## Package: `test`
-
-## Imports
+## Package: `test`## Imports 
 
 - `user.proto`
 
@@ -19,6 +17,7 @@ Nested message for test results
 | status_code | `int32` | 3 | Status code |
 | user_id | `string` | 4 | Reference to user |
 | result | `TestResult` | 4 | The test result |
+| test | `string` | 5 |  |
 
 #### TestResult (nested in TestMessage)
 
@@ -36,6 +35,6 @@ Nested message for test results
 
 | Method | Request | Response | Description |
 |--------|---------|----------|-------------|
-| RunTest | `TestMessage` | `TestMessage.TestResult` | Run a test |
-| GetStatus | `TestMessage` | `TestMessage` |  |
+| RunTest | `TestMessage` | `TestMessage.TestResult` | * Run a test |
+| GetStatus | `TestMessage` | `TestMessage` | Get test status |
 

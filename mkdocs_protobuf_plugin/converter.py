@@ -1,14 +1,14 @@
 import os
 import logging
 from pathlib import Path
-from .import_resolver import ProtoImportResolver
-from .extractors import ProtoExtractor
-from .types.proto_types import ProtoTypes
-from .types.message import Message, MessageField
-from .types.service import ServiceMethod, Service
-from .types.enum_proto import EnumProto, EnumValue
+from mkdocs_protobuf_plugin.import_resolver import ProtoImportResolver
+from mkdocs_protobuf_plugin.extractor import ProtoExtractor
+from mkdocs_protobuf_plugin.types.proto_types import ProtoTypes
+from mkdocs_protobuf_plugin.types.message import Message, MessageField
+from mkdocs_protobuf_plugin.types.service import ServiceMethod, Service
+from mkdocs_protobuf_plugin.types.enum_proto import EnumProto, EnumValue
 
-log = logging.getLogger("mkdocs.plugins.protobuf")
+
 
 
 class ProtoToMarkdownConverter:
@@ -17,12 +17,14 @@ class ProtoToMarkdownConverter:
         self.import_resolver = ProtoImportResolver()
         self.output_dir = ""
         self.proto_dirs = proto_dirs
+        self.log = logging.getLogger("mkdocs.plugins.protobuf")
 
     def convert_proto_files(self, proto_files: list[str], output_dir: str) -> list[str]:
         """
         Convert a list of proto files to markdown and save them in the output directory
         Returns a list of generated markdown files
         """
+        self.log.debug(f"Start converting {proto_files} into {output_dir} directory")
         self.output_dir = output_dir
 
         # First, initialize the import resolver with all proto files
@@ -34,15 +36,17 @@ class ProtoToMarkdownConverter:
         generated_files: list[str] = []
         for proto_file in proto_files:
             try:
+                self.log.debug(f"Try to convert {proto_file} file")
                 output_file = self.convert_proto_file(proto_file, output_dir)
                 if output_file:
+                    self.log.debug(f"Converted {proto_file} correctly")
                     generated_files.append(output_file)
             except Exception as e:
-                log.error(f"Error converting proto file {proto_file}: {str(e)}")
+                self.log.error(f"Error converting proto file {proto_file}: {str(e)}")
                 # Add more detailed error info for debugging
                 import traceback
 
-                log.debug(f"Traceback: {traceback.format_exc()}")
+                self.log.debug(f"Traceback: {traceback.format_exc()}")
         return generated_files
 
     def convert_proto_file(self, proto_file: str, output_dir: str) -> str:
@@ -50,7 +54,7 @@ class ProtoToMarkdownConverter:
         Convert a single proto file to markdown
         Returns the output file path
         """
-        log.info(f"Converting proto file: {proto_file}")
+        self.log.info(f"Converting proto file: {proto_file}")
 
         try:
             # Read the proto file
@@ -59,20 +63,23 @@ class ProtoToMarkdownConverter:
 
             # Parse and convert to markdown
             proto_path = Path(proto_file)
+            self.log.debug("Convert proto content into markdown")
             markdown_content = self.__proto_to_markdown__(
                 proto_content, proto_path.name, proto_file, output_dir
             )
 
+            self.log.debug("Get abosute path of the file")
             # Get absolute paths to work with
             abs_file_path = os.path.abspath(proto_file)
 
             # Find the most specific proto directory that contains this file
-            best_proto_dir = None
+            best_proto_dir = ""
             longest_common_path = ""
 
-            if hasattr(self, "proto_dirs"):
+            if self.proto_dirs:
                 for dir_path in self.proto_dirs:
                     try:
+                        self.log.debug("Try to get proto dir")
                         abs_dir_path = os.path.abspath(dir_path)
                         # Check if the proto file is within this directory
                         common_path = os.path.commonpath([abs_dir_path, abs_file_path])
@@ -82,6 +89,7 @@ class ProtoToMarkdownConverter:
                             best_proto_dir = abs_dir_path
                             longest_common_path = common_path
                     except ValueError:
+                        self.log.warning("Paths are differents")
                         # commonpath raises ValueError if paths are on different drives
                         continue
 
@@ -106,12 +114,12 @@ class ProtoToMarkdownConverter:
             with open(output_file, "w") as f:
                 f.write(markdown_content)
 
-            log.info(f"Generated markdown file: {output_file}")
+            self.log.info(f"Generated markdown file: {output_file}")
 
             return output_file
 
         except Exception as e:
-            log.error(f"Error converting {proto_file}: {str(e)}")
+            self.log.error(f"Error converting {proto_file}: {str(e)}")
             return ""
 
     def __proto_to_markdown__(
@@ -126,6 +134,7 @@ class ProtoToMarkdownConverter:
             current_proto_file: The absolute path to the current proto file (for resolving imports)
             output_dir: The output directory for markdown files
         """
+        self.log.debug(f"Start to converting proto content into markdown for {filename}")
         current_output_file: str = ""
         if current_proto_file and output_dir:
             # Determine the output file path for the current proto file

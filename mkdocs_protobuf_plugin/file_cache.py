@@ -17,11 +17,11 @@ class ProtoFileCache:
     to avoid unnecessary rebuilds.
     """
 
-    def __init__(self, cache_file=None):
+    def __init__(self, cache_file: str = ""):
         self.cache_file = cache_file or os.path.join(
             os.path.expanduser("~"), ".mkdocs_protobuf_cache.json"
         )
-        self.file_hashes = {}
+        self.file_hashes: dict[str, str] = {}
         self.load_cache()
 
     def load_cache(self):
@@ -48,7 +48,7 @@ class ProtoFileCache:
         except Exception as e:
             log.warning(f"Failed to save cache: {str(e)}")
 
-    def get_file_hash(self, file_path):
+    def get_file_hash(self, file_path: str):
         """Calculate the hash of a file's contents"""
         try:
             with open(file_path, "rb") as f:
@@ -58,7 +58,7 @@ class ProtoFileCache:
             log.warning(f"Failed to hash file {file_path}: {str(e)}")
             return None
 
-    def is_file_changed(self, file_path):
+    def is_file_changed(self, file_path: str):
         """Check if a file has changed since it was last processed"""
         abs_path = str(Path(file_path).absolute())
 
@@ -79,7 +79,7 @@ class ProtoFileCache:
         # If no previous hash or hash changed, the file has changed
         return previous_hash != current_hash
 
-    def update_file_hash(self, file_path):
+    def update_file_hash(self, file_path: str):
         """Update the stored hash for a file"""
         abs_path = str(Path(file_path).absolute())
         current_hash = self.get_file_hash(abs_path)

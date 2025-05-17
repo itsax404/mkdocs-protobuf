@@ -4,6 +4,9 @@ MkDocs Protobuf Plugin - i18n Support
 This module provides compatibility with the mkdocs-static-i18n plugin.
 """
 import logging
+from mkdocs.config.defaults import MkDocsConfig
+from mkdocs.plugins import PluginCollection
+from typing import Optional, Any, Union
 
 # Set up logging
 log = logging.getLogger("mkdocs.plugins.protobuf.i18n")
@@ -13,18 +16,18 @@ class I18nSupport:
     """Support for the mkdocs-static-i18n plugin."""
 
     @staticmethod
-    def is_i18n_active(config):
+    def is_i18n_active(config: MkDocsConfig) -> bool:
         """Check if mkdocs-static-i18n plugin is active in the MkDocs configuration."""
-        plugins = config.get("plugins", {})
+        plugins = config.plugins
         if isinstance(plugins, list):
             return any(p == "i18n" or (isinstance(p, dict) and "i18n" in p) for p in plugins)
         return "i18n" in plugins
 
     @staticmethod
-    def get_languages(config):
+    def get_languages(config: MkDocsConfig) -> list[str]:
         """Extract configured languages from mkdocs-static-i18n configuration."""
-        plugins = config.get("plugins", {})
-        i18n_config = None
+        plugins: PluginCollection = config.plugins
+        i18n_config: dict[str, Any] = None
 
         # Extract i18n plugin config based on its structure
         if isinstance(plugins, list):
@@ -39,7 +42,6 @@ class I18nSupport:
             return []
 
         # Get languages from config
-        languages = i18n_config.get("languages", [])
         if isinstance(languages, list):
             return [lang.get("locale") if isinstance(lang, dict) else lang for lang in languages]
         return list(languages.keys()) if isinstance(languages, dict) else []

@@ -1,5 +1,6 @@
 from re import Match
 import re
+import logging
 from mkdocs_protobuf_plugin.types.message import Message, MessageField
 from mkdocs_protobuf_plugin.types.enum_proto import EnumProto, EnumValue
 from mkdocs_protobuf_plugin.types.service import ServiceMethod, Service
@@ -14,10 +15,14 @@ BLOCK_COMMENTS_PATTERN = r"/\*\*(.*?)\*/\s*(?:optional|required|repeated)?\s*\w+
 METHOD_PATTERN = r"rpc\s+(\w+)\s*\(\s*(\w+(?:\.\w+)*)\s*\)\s*returns\s*\(\s*(\w+(?:\.\w+)*)\s*\)(?:\s*{(.*?)})?;(?:\s*//\s*(.*))?"  # noqa: E501
 
 
+
 class ProtoExtractor:
+
+    
 
     def __init__(self, file_content: str):
         self.file_content = file_content
+        self.log = logging.getLogger(f"mkdocs.plugins.{__name__}")
 
     def extract_infos(self):
         return ExtractedInfos(
@@ -30,10 +35,9 @@ class ProtoExtractor:
 
     def __extract_package__name__(self) -> str:
         package_match = re.search(PACKAGE_REGEX, self.file_content)
-        if package_match:
-            return package_match.group(1)
-        else:
-            return ""
+        result = package_match.group(1) if package_match else ""
+        self.log.debug(f"Extracted package name : {result}")
+        return result
 
     def __extract_messages__(self) -> list[Message]:
         """
@@ -55,19 +59,19 @@ class ProtoExtractor:
                 nested_fields = self.__extract_fields__(nested_body)
                 nested_messages.append(Message(nested_name, nested_body, list(), nested_fields))
             messages.append(Message(name, body, nested_messages, fields, comment))
-
+        self.log.debug(f"Extract messages : {messages}")
         return messages
 
     def __extract_message_comment__(self, message_content: str) -> str:
         comment_match = re.search(r"/\*\*(.*?)\*/", message_content, re.DOTALL)
+        final_comment = ""
         if comment_match:
             comment = comment_match.group(1).strip()
             # Clean up multi-line comments by removing * prefixes and normalizing whitespace
             comment = re.sub(r"\n\s*\*\s*", " ", comment)
-            comment = re.sub(r"\s+", " ", comment).strip()
-            return comment
-        else:
-            return ""
+            final_comment = re.sub(r"\s+", " ", comment).strip()
+        self.log.debug(f"Extracted message comment {final_comment} from {message_content}")
+        return final_comment
 
     def __extract_fields__(self, message_content: str) -> list[MessageField]:
         """
@@ -108,6 +112,7 @@ class ProtoExtractor:
         fields: list[MessageField] = list()
         for match in re.finditer(FIELD_PATTERN, clean_content):
             fields.append(self.__extract_field__(match, block_comments, line_comments))
+        self.log.debug(f"Extracted fields {fields} from {message_content}")
         return fields
 
     def __extract_field__(self, match: Match[str], block_comments: dict[str, str],
@@ -128,8 +133,10 @@ class ProtoExtractor:
 
         if modifier:
             field_type = f"{modifier} {field_type}"
-
-        return MessageField(name, field_type, number, options, comment)
+        
+        field = MessageField(name, field_type, number, options, comment)
+        self.log.debug(f"Extract field : {field} from match : {match} and block comments {block_comments}")
+        return field
 
     def __extract_line_comments__(self, clean_content: str, block_comments: dict[str, str]) -> dict[str, str]:
         # Process field definitions line by line to capture comments
@@ -158,18 +165,18 @@ class ProtoExtractor:
                 field_name, value = self.__logic_line_comments_fields__(line, block_comments, comment_lines)
             elif (i < len(lines) and "rpc " in line):
                 field_name, value = self.__logic_line_comments_methods__(line, block_comments, comment_lines)
-
             if (field_name != "" and value != ""):
                 line_comments[field_name] = value
 
             if (i < len(lines)):
                 i += 1
-
+        self.log.debug(f"Extracted line comments {line_comments} from clean content : {clean_content} and block comments {block_comments}")
         return line_comments
 
     def __logic_line_comments_fields__(self, line: str, block_comments: dict[str, str],
                                        comment_lines: list[str]) -> tuple[str, str]:
         field_match = re.search(r"(\w+)\s*=", line)
+        result = ("", "")
         if field_match and comment_lines:
             field_name = field_match.group(1)
             if (
@@ -193,23 +200,21 @@ class ProtoExtractor:
                     paragraphs.append(" ".join(current_paragraph))
 
                 # Join paragraphs with double newline to preserve formatting
-                return (field_name, "\n\n".join(paragraphs))
-            else:
-                return ("", "")
-        else:
-            return ("", "")
+                result = (field_name, "\n\n".join(paragraphs))
+        self.log.info(f"Extract line comment {result} from a field : {line} with block comments {block_comments}")
+        return result
 
     def __logic_line_comments_methods__(self, line: str, block_comments: dict[str, str],
                                         comment_lines: list[str]) -> tuple[str, str]:
         rpc_match = re.search(r"rpc\s+(\w+)", line)
+        result = ("", "")
         if rpc_match and block_comments:
             method_name = rpc_match.group(1)
             if method_name not in block_comments:  # Don't override block comments
-                return (method_name, " ".join(comment_lines))
-            else:
-                return ("", "")
-        else:
-            return ("", "")
+                result = (method_name, " ".join(comment_lines))
+
+        self.log.info(f"Extract line comment {result} from a method : {line} with comment_lines {comment_lines} and block comments {block_comments}")
+        return result
 
     def __extract_enums__(self) -> list[EnumProto]:
         """
@@ -226,15 +231,16 @@ class ProtoExtractor:
             comment = self.__extract_main_comment__(body)
             enum_values = self.__extract_enum_values__(body)
             enums.append(EnumProto(name, body, enum_values, comment))
-
+        self.log.debug(f"Extracted enums : {enums}")
         return enums
 
     def __extract_main_comment__(self, content: str) -> str:
         comment_match = re.search(COMMENT_REGEX, content, re.DOTALL)
+        result = ""
         if comment_match:
-            return comment_match.group(1).strip()
-        else:
-            return ""
+            result = comment_match.group(1).strip()
+        self.log.info(f"Extract main comment of {content} : {result}")
+        return result
 
     def __extract_enum_values__(self, enum_content: str) -> list[EnumValue]:
         """
@@ -251,7 +257,7 @@ class ProtoExtractor:
             comment = match.group(4) or ""
 
             values.append(EnumValue(name, number, options, comment))
-
+        self.log.debug(f"Extracted enum values {values} from {enum_content}")
         return values
 
     def __extract_imports__(self) -> list[str]:
@@ -270,6 +276,7 @@ class ProtoExtractor:
                 import_path = match.group(1)
                 imports.append(import_path)
 
+        self.log.debug(f"Extracted import {imports}")
         return imports
 
     def __extract_methods__(self, service_content: str) -> list[ServiceMethod]:
@@ -293,7 +300,7 @@ class ProtoExtractor:
 
         inline_comments = self.__extract_line_comments__(service_content, comments)
 
-        for key, value in inline_comments:
+        for key, value in inline_comments.items():
             comments[key] = value
 
         # Now extract all methods
@@ -309,7 +316,7 @@ class ProtoExtractor:
             description = comments.get(name, "") or inline_comment
 
             methods.append(ServiceMethod(name, request, response, options, description))
-
+        self.log.debug(f"Extracted methods {methods} from {service_content}")
         return methods
 
     def __extract_services__(self) -> list[Service]:
@@ -328,4 +335,5 @@ class ProtoExtractor:
             methods = self.__extract_methods__(body)
             services.append(Service(name, body, methods, comment))
 
+        self.log.debug(f"Extracted services {services}")
         return services
